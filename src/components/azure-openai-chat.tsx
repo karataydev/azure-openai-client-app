@@ -107,11 +107,14 @@ export default function AzureOpenAIChat() {
         apiKey: azureApiKey,
         baseURL: `${azureEndpoint}`,
         apiVersion: azureVersion,
+        dangerouslyAllowBrowser: true,
       });
+
+      const updatedMessages = [...messages, userMessage];
 
       const response = await client.chat.completions.create({
         model: azureVersion,
-        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
         max_tokens: 800,
       });
 
