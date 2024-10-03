@@ -174,6 +174,78 @@ export default function AzureOpenAIChat() {
     return parts;
   };
 
+  const renderTextWithFormatting = (text: string) => {
+    const lines = text.split("\n");
+    let inList = false;
+    let listItems = [];
+
+    const renderList = () => {
+      if (listItems.length > 0) {
+        const list = (
+          <ul className="list-disc pl-6 mb-2">
+            {listItems.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        );
+        listItems = [];
+        inList = false;
+        return list;
+      }
+      return null;
+    };
+
+    return lines
+      .map((line, index) => {
+        if (line.startsWith("# ")) {
+          const list = renderList();
+          return (
+            <React.Fragment key={index}>
+              {list}
+              <h1 className="text-2xl font-bold mt-4 mb-2">{line.slice(2)}</h1>
+            </React.Fragment>
+          );
+        } else if (line.startsWith("## ")) {
+          const list = renderList();
+          return (
+            <React.Fragment key={index}>
+              {list}
+              <h2 className="text-xl font-bold mt-3 mb-2">{line.slice(3)}</h2>
+            </React.Fragment>
+          );
+        } else if (line.startsWith("### ")) {
+          const list = renderList();
+          return (
+            <React.Fragment key={index}>
+              {list}
+              <h3 className="text-lg font-bold mt-2 mb-1">{line.slice(4)}</h3>
+            </React.Fragment>
+          );
+        } else if (line.trim().startsWith("- ")) {
+          inList = true;
+          listItems.push(line.trim().slice(2));
+          return null;
+        } else if (line.trim() === "") {
+          const list = renderList();
+          return (
+            <React.Fragment key={index}>
+              {list}
+              <br />
+            </React.Fragment>
+          );
+        } else {
+          const list = renderList();
+          return (
+            <React.Fragment key={index}>
+              {list}
+              <p className="mb-2">{line}</p>
+            </React.Fragment>
+          );
+        }
+      })
+      .filter(Boolean);
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -252,7 +324,9 @@ export default function AzureOpenAIChat() {
                             {part.content}
                           </SyntaxHighlighter>
                         ) : (
-                          <p key={i}>{part.content}</p>
+                          <div key={i}>
+                            {renderTextWithFormatting(part.content)}
+                          </div>
                         ),
                       )}
                     </div>
