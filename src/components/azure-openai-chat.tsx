@@ -89,7 +89,7 @@ export default function AzureOpenAIChat() {
     localStorage.setItem("azureVersion", data.azureVersion);
     setAzureEndpoint(data.azureEndpoint);
     setAzureApiKey(data.azureApiKey);
-    setAzureVersion(data.azureVersion)
+    setAzureVersion(data.azureVersion);
     alert("Settings saved!");
   };
 
@@ -114,7 +114,10 @@ export default function AzureOpenAIChat() {
 
       const response = await client.chat.completions.create({
         model: azureVersion,
-        messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
+        messages: updatedMessages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
         max_tokens: 800,
       });
 
@@ -134,6 +137,39 @@ export default function AzureOpenAIChat() {
     }
 
     setIsLoading(false);
+  };
+
+  const parseMessageContent = (content: string) => {
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = codeBlockRegex.exec(content)) !== null) {
+      // Add text before the code block
+      if (match.index > lastIndex) {
+        parts.push({
+          type: "text",
+          content: content.slice(lastIndex, match.index),
+        });
+      }
+
+      // Add the code block
+      parts.push({
+        type: "code",
+        language: match[1] || "plaintext",
+        content: match[2].trim(),
+      });
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add any remaining text after the last code block
+    if (lastIndex < content.length) {
+      parts.push({ type: "text", content: content.slice(lastIndex) });
+    }
+
+    return parts;
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -200,7 +236,23 @@ export default function AzureOpenAIChat() {
                           : "bg-muted"
                       }`}
                     >
-                      {message.content}
+                      {parseMessageContent(message.content).map((part, i) =>
+                        part.type === "code" ? (
+                          <SyntaxHighlighter
+                            key={i}
+                            language={part.language}
+                            style={vscDarkPlus}
+                            customStyle={{
+                              margin: "0.5em 0",
+                              borderRadius: "4px",
+                            }}
+                          >
+                            {part.content}
+                          </SyntaxHighlighter>
+                        ) : (
+                          <p key={i}>{part.content}</p>
+                        ),
+                      )}
                     </div>
                     {message.role === "user" && (
                       <Avatar>
