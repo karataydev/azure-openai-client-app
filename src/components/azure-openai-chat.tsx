@@ -28,7 +28,7 @@ interface Message {
 type SettingsFormValues = {
   azureEndpoint: string;
   azureApiKey: string;
-  deploymentName: string;
+  azureVersion: string;
 };
 
 function ThemeToggle() {
@@ -55,7 +55,7 @@ export default function AzureOpenAIChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [azureEndpoint, setAzureEndpoint] = useState("");
   const [azureApiKey, setAzureApiKey] = useState("");
-  const [deploymentName, setDeploymentName] = useState("");
+  const [azureVersion, setAzureVersion] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { theme, setTheme } = useTheme();
 
@@ -63,33 +63,33 @@ export default function AzureOpenAIChat() {
     defaultValues: {
       azureEndpoint: "",
       azureApiKey: "",
-      deploymentName: "",
+      azureVersion: "",
     },
   });
 
   useEffect(() => {
     const savedEndpoint = localStorage.getItem("azureEndpoint") || "";
     const savedApiKey = localStorage.getItem("azureApiKey") || "";
-    const savedDeploymentName = localStorage.getItem("deploymentName") || "";
+    const savedAzureVersion = localStorage.getItem("azureVersion") || "";
 
     form.reset({
       azureEndpoint: savedEndpoint,
       azureApiKey: savedApiKey,
-      deploymentName: savedDeploymentName,
+      azureVersion: savedAzureVersion,
     });
 
     setAzureEndpoint(savedEndpoint);
     setAzureApiKey(savedApiKey);
-    setDeploymentName(savedDeploymentName);
+    setAzureVersion(savedAzureVersion);
   }, [form]);
 
   const saveSettings = (data: SettingsFormValues) => {
     localStorage.setItem("azureEndpoint", data.azureEndpoint);
     localStorage.setItem("azureApiKey", data.azureApiKey);
-    localStorage.setItem("deploymentName", data.deploymentName);
+    localStorage.setItem("azureVersion", data.azureVersion);
     setAzureEndpoint(data.azureEndpoint);
     setAzureApiKey(data.azureApiKey);
-    setDeploymentName(data.deploymentName);
+    setAzureVersion(data.azureVersion)
     alert("Settings saved!");
   };
 
@@ -106,12 +106,11 @@ export default function AzureOpenAIChat() {
       const client = new AzureOpenAI({
         apiKey: azureApiKey,
         baseURL: `${azureEndpoint}`,
-        defaultQuery: { "api-version": "2023-05-15" },
-        defaultHeaders: { "api-key": azureApiKey },
+        apiVersion: azureVersion,
       });
 
       const response = await client.chat.completions.create({
-        model: deploymentName,
+        model: azureVersion,
         messages: messages.map((m) => ({ role: m.role, content: m.content })),
         max_tokens: 800,
       });
@@ -257,7 +256,7 @@ export default function AzureOpenAIChat() {
                         <FormLabel>Azure Endpoint</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="https://your-resource-name.openai.azure.com"
+                            placeholder="https://your-resource-name.openai.azure.com/opeanai/deployments/gpt-4o"
                             {...field}
                           />
                         </FormControl>
@@ -284,13 +283,13 @@ export default function AzureOpenAIChat() {
                   />
                   <FormField
                     control={form.control}
-                    name="deploymentName"
+                    name="azureVersion"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Deployment Name</FormLabel>
+                        <FormLabel>Model Version</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Your Azure OpenAI Deployment Name"
+                            placeholder="Your Azure OpenAI Deployment Version"
                             {...field}
                           />
                         </FormControl>
